@@ -1,7 +1,7 @@
 import streamlit as st
 from openai import OpenAI
+
 def app():
-    st.title("202313522 최우원 Lab21과제")
     if "api_key" not in st.session_state:
         st.session_state.api_key = ""
 
