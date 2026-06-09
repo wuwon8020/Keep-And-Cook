@@ -3,7 +3,21 @@ import json
 from openai import OpenAI
 from tavily import TavilyClient
 
-def get_recipes(items, openai_key, tavily_key):
+def get_recipes():
+    if "food_item" not in st.session_state or len(st.session_state.food_item) == 0:
+        st.error("냉장고에 재료가 없습니다. 먼저 재료를 추가해주세요.")
+        return [], []
+    item = st.session_state.food_item
+    if "api_key" not in st.session_state or st.session_state.api_key == "":
+        st.error("OpenAI API Key가 없습니다. API Key를 입력해주세요.")
+        return [], []
+    openai_key = st.session_state.api_key
+
+    if "tavily_key" not in st.session_state or st.session_state.tavily_key == "":
+        st.error("Tavily API Key가 없습니다. API Key를 입력해주세요.")
+        return [], []
+    
+    tavily_key = st.session_state.tavily_key
     # 1. 유통기한 남은 재료 전체 필터링 및 임박순 정렬
     valid_items = [item for item in items if isinstance(item.get('dDay'), int) and item['dDay'] >= 0]
     
@@ -23,12 +37,13 @@ def get_recipes(items, openai_key, tavily_key):
     냉장고에 있는 전체 재료 목록과 남은 유통기한: {', '.join(ingredient_info)}
     
     위 재료들을 스캔하여, 유통기한이 임박한(D-Day가 적은) 재료를 우선적으로 소비할 수 있는 자취생 맞춤형 요리 레시피를 2~3개 추천해줘.
-    
+    ingredients 필드에서는 무조건 전체 재료 목록에 있는 이름 그대로를 사용해야해
     반드시 아래 JSON 형식에 맞게 답변해줘:
     {{
         "recipes": [
             {{
                 "title": "요리 이름",
+                "ingredients": ["재료1", "재료2", "..."],
                 "content": "1. 단계별 조리법...\n2. ...",
                 "search_keyword": "유튜브와 블로그에서 이 요리를 찾기 위해 검색할 명확한 요리 이름 키워드"
             }}
