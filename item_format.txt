@@ -10,6 +10,6 @@ food_item
 	"name":str,
 	"dDay":int,
     "purchase_date": str,
-    "expire_date": str
+    "exday":int,
 
 }

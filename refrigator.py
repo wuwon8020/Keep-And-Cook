@@ -3,17 +3,20 @@ import streamlit as st
 def app():
     st.title("재료 목록")
     
-    st.session_state.food_items.sort(key=lambda x: x["dDay"])
-
-    if len(st.session_state.food_items) == 0:
+    
+    if "food_item" not in st.session_state:
+        st.session_state.food_item = []
+        st.error("아직 냉장고에 아무 재료도 없습니다.");
+        return
+    if len(st.session_state.food_item) == 0:
         st.info("저장된 재료가 없습니다.")
         return
-
-    for item in st.session_state.food_items:
+    st.session_state.food_item.sort(key=lambda x: x["dDay"])
+    for item in st.session_state.food_item:
         st.subheader(item["name"])
 
         st.write(f"구매일: {item['purchase_date']}")
-        st.write(f"유통기한: {item['expire_date']}")
+        st.write(f"유통기한: {item['exday']}일")
         st.write(f"D-Day: {item['dDay']}일")
 
         if item["dDay"] <= 0:
