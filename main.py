@@ -24,5 +24,5 @@ elif page == "Receipt":
 elif page == "Refrigator":
     refrigator.app()
     
-elif page == "kitchen":
+elif page == "Kitchen":
     kitchen.app()

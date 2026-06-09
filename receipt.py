@@ -209,7 +209,6 @@ def app():
         return True
 
     # UI
-    st.title("Keep And Cook 🍳")
     st.subheader("영수증 재료 등록")
 
     uploaded_file = st.file_uploader(
@@ -223,7 +222,7 @@ def app():
         st.image(
             image,
             caption="업로드된 영수증",
-            width="stretch",
+            width='stretch',
         )
 
         if st.button("영수증에서 재료 추출하기"):
@@ -300,7 +299,7 @@ def app():
 
         st.dataframe(
             table_data,
-            use_container_width=True,
+            width='stretch',
         )
     else:
         st.info("아직 이번 영수증에서 저장한 재료가 없습니다.")
