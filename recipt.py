@@ -4,22 +4,23 @@ from datetime import datetime
 from PIL import Image
 from openai import OpenAI
 import base64
+def app() :
+    # 1. 세션 상태 초기화 (st.session_state.item 단수형 사용)
+    if "food_item" not in st.session_state or st.session_state.item is None:
+        st.session_state.food_item = []
+    if "food_item" not in st.session_state or st.session_state.item is None:
+        st.session_state.food_item = []
+    # AI가 추출한 최종 임시 결과를 보관할 세션
+    if "temp_extracted" not in st.session_state:
+        st.session_state.temp_extracted = None
 
-# 1. 세션 상태 초기화 (st.session_state.item 단수형 사용)
-if "item" not in st.session_state or st.session_state.item is None:
-    st.session_state.item = []
-
-# AI가 추출한 최종 임시 결과를 보관할 세션
-if "temp_extracted" not in st.session_state:
-    st.session_state.temp_extracted = None
-
-# 2. 사이드바에 API 키 입력창 추가
-st.sidebar.title("🔐 설정 (Settings)")
-user_openai_api_key = st.sidebar.text_input(
-    "OpenAI API Key를 입력하세요", 
-    type="password",
-    help="OpenAI 홈페이지에서 발급받은 api 키(sk-...)를 입력해야 기능이 작동합니다."
-)
+    # 2. 사이드바에 API 키 입력창 추가
+    st.sidebar.title("🔐 설정 (Settings)")
+    user_openai_api_key = st.sidebar.text_input(
+        "OpenAI API Key를 입력하세요", 
+        type="password",
+        help="OpenAI 홈페이지에서 발급받은 api 키(sk-...)를 입력해야 기능이 작동합니다."
+    )
 
 # 3. 주요 함수 설계 (OCR 단계와 추론 단계를 분리)
 
@@ -39,7 +40,7 @@ def run_ocr_step(image_file, client):
     """
     
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-5-5mini",
         messages=[
             {
                 "role": "user",
