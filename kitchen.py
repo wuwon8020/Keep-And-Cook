@@ -7,7 +7,7 @@ def app():
     if "food_item" not in st.session_state or len(st.session_state.food_item) == 0:
         st.error("냉장고에 재료가 없습니다. 먼저 재료를 추가해주세요.")
         return 
-    item = st.session_state.food_item
+    items = st.session_state.food_item
     if "api_key" not in st.session_state or st.session_state.api_key == "":
         st.error("OpenAI API Key가 없습니다. API Key를 입력해주세요.")
         return 
