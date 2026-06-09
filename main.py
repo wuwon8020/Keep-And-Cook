@@ -25,4 +25,4 @@ elif page == "Refrigator":
     refrigator.app()
     
 elif page == "kitchen":
-    kitchen.get_recipe()
+    kitchen.app()

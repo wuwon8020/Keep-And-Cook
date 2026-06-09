@@ -3,19 +3,19 @@ import json
 from openai import OpenAI
 from tavily import TavilyClient
 
-def get_recipes():
+def app():
     if "food_item" not in st.session_state or len(st.session_state.food_item) == 0:
         st.error("냉장고에 재료가 없습니다. 먼저 재료를 추가해주세요.")
-        return [], []
+        return 
     item = st.session_state.food_item
     if "api_key" not in st.session_state or st.session_state.api_key == "":
         st.error("OpenAI API Key가 없습니다. API Key를 입력해주세요.")
-        return [], []
+        return 
     openai_key = st.session_state.api_key
 
     if "tavily_key" not in st.session_state or st.session_state.tavily_key == "":
         st.error("Tavily API Key가 없습니다. API Key를 입력해주세요.")
-        return [], []
+        return 
     
     tavily_key = st.session_state.tavily_key
     # 1. 유통기한 남은 재료 전체 필터링 및 임박순 정렬
