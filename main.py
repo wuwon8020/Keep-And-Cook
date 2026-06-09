@@ -19,10 +19,10 @@ if page == "api_key":
     api_key.app()
 
 elif page == "Receipt":
-    Receipt.app()
+    receipt.app()
 
 elif page == "Refrigator":
-    Refrigator.app()
+    refrigator.app()
     
 elif page == "kitchen":
-    Kitchen.app()
+    kitchen.app()
