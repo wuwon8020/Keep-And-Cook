@@ -1,0 +1,16 @@
+#재료, 유통기한
+food_exday {
+    name : str,
+    exday : int;
+}
+
+#재료, 남은 날짜, 구매 날짜, 유통기한
+food_item
+{
+	"name":str,
+	"dDay":int,
+    "purchase_date": str,
+    "expire_date": str
+
+}
+
