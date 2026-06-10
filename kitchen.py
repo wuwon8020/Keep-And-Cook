@@ -1,7 +1,9 @@
 import streamlit as st
 import json
+import re
 from openai import OpenAI
 from tavily import TavilyClient
+
 
 def app():
     st.title("요리 추천")
@@ -51,13 +53,11 @@ def app():
 
     if st.button("요리 찾기"):
         with st.spinner("냉장고 재료를 분석해서 요리를 찾는 중입니다..."):
-            recipes = find_recipes(
+            st.session_state.recipes = find_recipes(
                 ingredient_info,
                 openai_key,
                 tavily_key
             )
-
-            st.session_state.recipes = recipes
 
     if len(st.session_state.recipes) == 0:
         st.info("요리 찾기 버튼을 눌러 추천 레시피를 받아보세요.")
@@ -66,32 +66,52 @@ def app():
     st.subheader("추천 레시피")
 
     for i, recipe in enumerate(st.session_state.recipes, start=1):
-        st.markdown(f"### {i}. {recipe.get('title', '이름 없음')}")
+        with st.container(border=True):
+            st.markdown(f"## {i}. {recipe.get('title', '이름 없음')}")
 
-        st.write("사용 재료")
-        st.write(", ".join(recipe.get("ingredients", [])))
+            st.write("사용 재료")
+            st.write(", ".join(recipe.get("ingredients", [])))
 
-        st.write("조리법")
-        st.write(recipe.get("content", ""))
+            st.write("조리법")
+            st.write(recipe.get("content", ""))
 
-        youtube_url = recipe.get("youtube_url")
-        blog_url = recipe.get("blog_url")
+            st.markdown("### 참고 레시피")
 
-        col1, col2 = st.columns(2)
+            preview_cols = st.columns(2)
 
-        with col1:
-            if youtube_url:
-                st.link_button("유튜브 레시피 보기", youtube_url)
-            else:
-                st.caption("유튜브 링크 없음")
+            with preview_cols[0]:
+                show_preview_card(
+                    recipe.get("youtube_preview"),
+                    default_label="유튜브 레시피"
+                )
 
-        with col2:
-            if blog_url:
-                st.link_button("블로그 레시피 보기", blog_url)
-            else:
-                st.caption("블로그 링크 없음")
+            with preview_cols[1]:
+                show_preview_card(
+                    recipe.get("blog_preview"),
+                    default_label="블로그 레시피"
+                )
 
-        st.divider()
+
+def show_preview_card(preview, default_label):
+    if not preview or not preview.get("url"):
+        st.caption(f"{default_label} 링크 없음")
+        return
+
+    title = preview.get("title") or default_label
+    url = preview.get("url")
+    description = preview.get("description") or ""
+    thumbnail = preview.get("thumbnail")
+
+    with st.container(border=True):
+        if thumbnail:
+            st.image(thumbnail, use_container_width=True)
+
+        st.markdown(f"**{title}**")
+
+        if description:
+            st.caption(description[:120] + "..." if len(description) > 120 else description)
+
+        st.link_button("바로가기", url, use_container_width=True)
 
 
 def find_recipes(ingredient_info, openai_key, tavily_key):
@@ -100,8 +120,10 @@ def find_recipes(ingredient_info, openai_key, tavily_key):
     prompt = f"""
     냉장고에 있는 전체 재료 목록과 남은 유통기한: {', '.join(ingredient_info)}
 
-    위 재료들을 스캔하여, 유통기한이 임박한(D-Day가 적은) 재료를 우선적으로 소비할 수 있는 자취생 맞춤형 요리 레시피를 2~3개 추천해줘.
-    ingredients 필드에서는 무조건 전체 재료 목록에 있는 이름 그대로를 사용해야해.
+    위 재료들을 스캔하여, 유통기한이 임박한 재료를 우선적으로 소비할 수 있는
+    자취생 맞춤형 요리 레시피를 2~3개 추천해줘.
+
+    ingredients 필드에서는 반드시 전체 재료 목록에 있는 이름 그대로를 사용해야 해.
 
     반드시 아래 JSON 형식에 맞게 답변해줘:
     {{
@@ -110,7 +132,7 @@ def find_recipes(ingredient_info, openai_key, tavily_key):
                 "title": "요리 이름",
                 "ingredients": ["재료1", "재료2"],
                 "content": "1. 단계별 조리법...\\n2. ...",
-                "search_keyword": "유튜브와 블로그에서 이 요리를 찾기 위해 검색할 명확한 요리 이름 키워드"
+                "search_keyword": "검색에 사용할 명확한 요리 이름"
             }}
         ]
     }}
@@ -135,31 +157,86 @@ def find_recipes(ingredient_info, openai_key, tavily_key):
     tavily = TavilyClient(api_key=tavily_key)
 
     for recipe in recipes:
-        recipe["youtube_url"] = None
-        recipe["blog_url"] = None
-
         keyword = recipe.get("search_keyword", recipe.get("title", ""))
 
-        try:
-            yt_search = tavily.search(
-                query=f"{keyword} 레시피 site:youtube.com",
-                search_depth="basic",
-                max_results=1
-            )
-
-            if yt_search.get("results"):
-                recipe["youtube_url"] = yt_search["results"][0]["url"]
-
-            web_search = tavily.search(
-                query=f"{keyword} 간단 레시피",
-                search_depth="basic",
-                max_results=1
-            )
-
-            if web_search.get("results"):
-                recipe["blog_url"] = web_search["results"][0]["url"]
-
-        except Exception:
-            pass
+        recipe["youtube_preview"] = get_youtube_preview(tavily, keyword)
+        recipe["blog_preview"] = get_blog_preview(tavily, keyword)
 
     return recipes
+
+
+def get_youtube_preview(tavily, keyword):
+    try:
+        result = tavily.search(
+            query=f"{keyword} 레시피 site:youtube.com",
+            search_depth="basic",
+            max_results=1
+        )
+
+        results = result.get("results", [])
+
+        if not results:
+            return None
+
+        item = results[0]
+        url = item.get("url")
+        video_id = extract_youtube_id(url)
+
+        thumbnail = None
+        if video_id:
+            thumbnail = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+
+        return {
+            "title": item.get("title", "유튜브 레시피"),
+            "url": url,
+            "description": item.get("content", ""),
+            "thumbnail": thumbnail
+        }
+
+    except Exception:
+        return None
+
+
+def get_blog_preview(tavily, keyword):
+    try:
+        result = tavily.search(
+            query=f"{keyword} 간단 레시피 블로그",
+            search_depth="basic",
+            max_results=1
+        )
+
+        results = result.get("results", [])
+
+        if not results:
+            return None
+
+        item = results[0]
+
+        return {
+            "title": item.get("title", "블로그 레시피"),
+            "url": item.get("url"),
+            "description": item.get("content", ""),
+            "thumbnail": item.get("image_url")
+        }
+
+    except Exception:
+        return None
+
+
+def extract_youtube_id(url):
+    if not url:
+        return None
+
+    patterns = [
+        r"youtu\.be/([^?&]+)",
+        r"youtube\.com/watch\?v=([^?&]+)",
+        r"youtube\.com/shorts/([^?&]+)",
+        r"youtube\.com/embed/([^?&]+)"
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+
+    return None
