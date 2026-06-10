@@ -5,7 +5,7 @@ import receipt
 import kitchen
 import refrigator
 
-st.title("Keep And Cook")
+st.title("Keep & Cook")
 page = st.sidebar.radio(
     "항목 선택",
     (   "api_key",
