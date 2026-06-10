@@ -104,14 +104,14 @@ def show_preview_card(preview, default_label):
 
     with st.container(border=True):
         if thumbnail:
-            st.image(thumbnail, use_container_width=True)
+            st.image(thumbnail, width='stretch')
 
         st.markdown(f"**{title}**")
 
         if description:
             st.caption(description[:120] + "..." if len(description) > 120 else description)
 
-        st.link_button("바로가기", url, use_container_width=True)
+        st.link_button("바로가기", url, width='stretch')
 
 
 def find_recipes(ingredient_info, openai_key, tavily_key):
