@@ -86,4 +86,41 @@ def app():
         except Exception:
             pass # 검색 실패 시 해당 레시피의 링크만 None으로 유지하고 계속 진행
             
-    return recipes, ingredient_names
+    # 4. Streamlit 화면 출력
+    st.subheader("사용 가능한 재료")
+    st.write(", ".join(ingredient_names))
+
+    st.subheader("추천 레시피")
+
+    if len(recipes) == 0:
+        st.info("추천된 레시피가 없습니다.")
+        return recipes, ingredient_names
+
+    for i, recipe in enumerate(recipes, start=1):
+        st.markdown(f"### {i}. {recipe.get('title', '이름 없음')}")
+
+        st.write("사용 재료")
+        st.write(", ".join(recipe.get("ingredients", [])))
+
+        st.write("조리법")
+        st.write(recipe.get("content", ""))
+
+        youtube_url = recipe.get("youtube_url")
+        blog_url = recipe.get("blog_url")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if youtube_url:
+                st.link_button("유튜브 레시피 보기", youtube_url)
+            else:
+                st.caption("유튜브 링크 없음")
+
+        with col2:
+            if blog_url:
+                st.link_button("블로그 레시피 보기", blog_url)
+            else:
+                st.caption("블로그 링크 없음")
+
+        st.divider()
+
